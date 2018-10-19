@@ -58,6 +58,7 @@ static const std::string DEST_SNAPSHOT_NAME("dest-snap");
 static const std::string JOURNAL_NAME("journal");
 static const std::string DEST_JOURNAL_NAME("dest-journal");
 static const std::string PATH("path");
+static const std::string INCLUDE_PARENTS("include-parents");
 static const std::string FROM_SNAPSHOT_NAME("from-snap");
 static const std::string WHOLE_OBJECT("whole-object");
 

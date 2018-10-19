@@ -231,7 +231,7 @@ int DiffIterate<I>::diff_iterate(I *ictx,
 				 const cls::rbd::SnapshotNamespace& from_snap_namespace,
 				 const char *fromsnapname,
                                  uint64_t off, uint64_t len,
-                                 bool include_parent, bool whole_object,
+                                 uint64_t include_parents, bool whole_object,
                                  int (*cb)(uint64_t, size_t, int, void *),
                                  void *arg)
 {
@@ -267,7 +267,7 @@ int DiffIterate<I>::diff_iterate(I *ictx,
   }
 
   DiffIterate command(*ictx, from_snap_namespace, fromsnapname, off, len,
-		      include_parent, whole_object, cb, arg);
+		      include_parents, whole_object, cb, arg);
   r = command.execute();
   return r;
 }
@@ -330,7 +330,7 @@ int DiffIterate<I>::execute() {
   // check parent overlap only if we are comparing to the beginning of time
   DiffContext diff_context(m_image_ctx, m_callback, m_callback_arg,
                            m_whole_object, from_snap_id, end_snap_id);
-  if (m_include_parent && from_snap_id == 0) {
+  if (m_include_parents > 0 && from_snap_id == 0) {
     RWLock::RLocker l(m_image_ctx.snap_lock);
     RWLock::RLocker l2(m_image_ctx.parent_lock);
     uint64_t overlap = 0;
@@ -340,7 +340,7 @@ int DiffIterate<I>::execute() {
       ldout(cct, 10) << " first getting parent diff" << dendl;
       DiffIterate diff_parent(*m_image_ctx.parent, {},
 			      nullptr, 0, overlap,
-                              m_include_parent, m_whole_object,
+                              m_include_parents-1, m_whole_object,
                               &simple_diff_cb,
                               &diff_context.parent_diff);
       r = diff_parent.execute();

@@ -1765,11 +1765,28 @@ namespace librbd {
     ImageCtx *ictx = (ImageCtx *)ctx;
     tracepoint(librbd, diff_iterate_enter, ictx, ictx->name.c_str(),
               ictx->snap_name.c_str(), ictx->read_only, fromsnapname, ofs, len,
-              include_parent, whole_object);
+              include_parent ? 1 : 0, whole_object);
     int r = librbd::api::DiffIterate<>::diff_iterate(ictx,
 						     cls::rbd::UserSnapshotNamespace(),
 						     fromsnapname, ofs,
-                                                     len, include_parent,
+                                                     len, include_parent ? 1 : 0,
+                                                     whole_object, cb, arg);
+    tracepoint(librbd, diff_iterate_exit, r);
+    return r;
+  }
+
+  int Image::diff_iterate3(const char *fromsnapname, uint64_t ofs, uint64_t len,
+                           uint64_t include_parents, bool whole_object,
+                           int (*cb)(uint64_t, size_t, int, void *), void *arg)
+  {
+    ImageCtx *ictx = (ImageCtx *)ctx;
+    tracepoint(librbd, diff_iterate_enter, ictx, ictx->name.c_str(),
+              ictx->snap_name.c_str(), ictx->read_only, fromsnapname, ofs, len,
+              include_parents, whole_object);
+    int r = librbd::api::DiffIterate<>::diff_iterate(ictx,
+						     cls::rbd::UserSnapshotNamespace(),
+						     fromsnapname, ofs,
+                                                     len, include_parents,
                                                      whole_object, cb, arg);
     tracepoint(librbd, diff_iterate_exit, r);
     return r;
@@ -3926,11 +3943,30 @@ extern "C" int rbd_diff_iterate2(rbd_image_t image, const char *fromsnapname,
   librbd::ImageCtx *ictx = (librbd::ImageCtx *)image;
   tracepoint(librbd, diff_iterate_enter, ictx, ictx->name.c_str(),
             ictx->snap_name.c_str(), ictx->read_only, fromsnapname, ofs, len,
-            include_parent != 0, whole_object != 0);
+            include_parent != 0 ? 1 : 0, whole_object != 0);
   int r = librbd::api::DiffIterate<>::diff_iterate(ictx,
 						   cls::rbd::UserSnapshotNamespace(),
 						   fromsnapname, ofs, len,
-                                                   include_parent, whole_object,
+                                                   include_parent != 0 ? 1 : 0, whole_object,
+                                                   cb, arg);
+  tracepoint(librbd, diff_iterate_exit, r);
+  return r;
+}
+
+extern "C" int rbd_diff_iterate3(rbd_image_t image, const char *fromsnapname,
+                                uint64_t ofs, uint64_t len,
+                                uint64_t include_parents, uint8_t whole_object,
+                                int (*cb)(uint64_t, size_t, int, void *),
+                                void *arg)
+{
+  librbd::ImageCtx *ictx = (librbd::ImageCtx *)image;
+  tracepoint(librbd, diff_iterate_enter, ictx, ictx->name.c_str(),
+            ictx->snap_name.c_str(), ictx->read_only, fromsnapname, ofs, len,
+            include_parents, whole_object != 0);
+  int r = librbd::api::DiffIterate<>::diff_iterate(ictx,
+						   cls::rbd::UserSnapshotNamespace(),
+						   fromsnapname, ofs, len,
+                                                   include_parents, whole_object,
                                                    cb, arg);
   tracepoint(librbd, diff_iterate_exit, r);
   return r;

@@ -892,7 +892,7 @@ static int do_import(librados::Rados &rados, librbd::RBD &rbd,
   }
 
   r = rbd.create4(io_ctx, imgname, size, opts);
-  if (r < 0) {
+  if (r < 0 && r != -EEXIST) {
     std::cerr << "rbd: image creation failed" << std::endl;
     goto done;
   }

@@ -745,6 +745,7 @@ CEPH_RBD_API int rbd_read_iterate2(rbd_image_t image, uint64_t ofs, uint64_t len
  * @param ofs start offset
  * @param len len in bytes of region to report on
  * @param include_parent 1 if full history diff should include parent
+ * @param include_parents how much parents should history diff include
  * @param whole_object 1 if diff extents should cover whole object
  * @param cb callback to call for each allocated region
  * @param arg argument to pass to the callback
@@ -759,6 +760,12 @@ CEPH_RBD_API int rbd_diff_iterate2(rbd_image_t image,
 		                   const char *fromsnapname,
 		                   uint64_t ofs, uint64_t len,
                                    uint8_t include_parent, uint8_t whole_object,
+		                   int (*cb)(uint64_t, size_t, int, void *),
+                                   void *arg);
+CEPH_RBD_API int rbd_diff_iterate3(rbd_image_t image,
+		                   const char *fromsnapname,
+		                   uint64_t ofs, uint64_t len,
+                                   uint64_t include_parents, uint8_t whole_object,
 		                   int (*cb)(uint64_t, size_t, int, void *),
                                    void *arg);
 CEPH_RBD_API ssize_t rbd_write(rbd_image_t image, uint64_t ofs, size_t len,

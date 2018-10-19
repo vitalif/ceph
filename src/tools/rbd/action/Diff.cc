@@ -41,7 +41,7 @@ static int diff_cb(uint64_t ofs, size_t len, int exists, void *arg)
   return 0;
 }
 
-static int do_diff(librbd::Image& image, const char *fromsnapname,
+static int do_diff(librbd::Image& image, const char *fromsnapname, uint64_t include_parents,
                    bool whole_object, Formatter *f)
 {
   int r;
@@ -62,7 +62,7 @@ static int do_diff(librbd::Image& image, const char *fromsnapname,
     om.t->define_column("Type", TextTable::LEFT, TextTable::LEFT);
   }
 
-  r = image.diff_iterate2(fromsnapname, 0, info.size, true, whole_object,
+  r = image.diff_iterate3(fromsnapname, 0, info.size, include_parents, whole_object,
                           diff_cb, &om);
   if (f) {
     f->close_section();
@@ -82,6 +82,8 @@ void get_arguments(po::options_description *positional,
   options->add_options()
     (at::FROM_SNAPSHOT_NAME.c_str(), po::value<std::string>(),
      "snapshot starting point")
+    (at::INCLUDE_PARENTS.c_str(), po::value<uint64_t>(),
+      "maximum number of parents to include in diff")
     (at::WHOLE_OBJECT.c_str(), po::bool_switch(), "compare whole object");
   at::add_format_options(options);
 }
@@ -107,6 +109,11 @@ int execute(const po::variables_map &vm,
 
   bool diff_whole_object = vm[at::WHOLE_OBJECT].as<bool>();
 
+  uint64_t include_parents = 0;
+  if (vm.count(at::INCLUDE_PARENTS)) {
+    include_parents = vm[at::INCLUDE_PARENTS].as<uint64_t>();
+  }
+
   at::Format::Formatter formatter;
   r = utils::get_formatter(vm, &formatter);
   if (r < 0) {
@@ -123,7 +130,7 @@ int execute(const po::variables_map &vm,
   }
 
   r = do_diff(image, from_snap_name.empty() ? nullptr : from_snap_name.c_str(),
-              diff_whole_object, formatter.get());
+              include_parents, diff_whole_object, formatter.get());
   if (r < 0) {
     std::cerr << "rbd: diff error: " << cpp_strerror(r) << std::endl;
     return -r;

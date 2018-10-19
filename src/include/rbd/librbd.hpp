@@ -418,6 +418,7 @@ public:
    * @param ofs start offset
    * @param len len in bytes of region to report on
    * @param include_parent true if full history diff should include parent
+   * @param include_parents how much parents should history diff include
    * @param whole_object 1 if diff extents should cover whole object
    * @param cb callback to call for each allocated region
    * @param arg argument to pass to the callback
@@ -429,6 +430,10 @@ public:
   int diff_iterate2(const char *fromsnapname,
 		    uint64_t ofs, uint64_t len,
                     bool include_parent, bool whole_object,
+		    int (*cb)(uint64_t, size_t, int, void *), void *arg);
+  int diff_iterate3(const char *fromsnapname,
+		    uint64_t ofs, uint64_t len,
+                    uint64_t include_parents, bool whole_object,
 		    int (*cb)(uint64_t, size_t, int, void *), void *arg);
 
   ssize_t write(uint64_t ofs, size_t len, ceph::bufferlist& bl);
