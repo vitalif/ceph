@@ -4203,12 +4203,16 @@ void BlueStore::_init_logger()
   PerfCountersBuilder b(cct, "bluestore",
                         l_bluestore_first, l_bluestore_last);
   b.add_time_avg(l_bluestore_kv_flush_lat, "kv_flush_lat",
-		 "Average kv_thread flush latency",
+		 "Average kv_thread aio flush latency",
 		 "fl_l", PerfCountersBuilder::PRIO_INTERESTING);
+  b.add_time_avg(l_bluestore_kv_submit_lat, "kv_submit_lat",
+		 "Average kv_thread txn submit latency");
+  b.add_time_avg(l_bluestore_kv_deferred_lat, "kv_deferred_lat",
+		 "Average kv_thread deferred cleanup latency");
   b.add_time_avg(l_bluestore_kv_commit_lat, "kv_commit_lat",
 		 "Average kv_thread commit latency");
   b.add_time_avg(l_bluestore_kv_lat, "kv_lat",
-		 "Average kv_thread sync latency",
+		 "Average kv_thread iteration latency",
 		 "k_l", PerfCountersBuilder::PRIO_INTERESTING);
   b.add_time_avg(l_bluestore_state_prepare_lat, "state_prepare_lat",
     "Average prepare state latency");
@@ -4221,8 +4225,6 @@ void BlueStore::_init_logger()
     "Average kv_queued state latency");
   b.add_time_avg(l_bluestore_state_kv_committing_lat, "state_kv_commiting_lat",
     "Average kv_commiting state latency");
-  b.add_time_avg(l_bluestore_state_kv_done_lat, "state_kv_done_lat",
-    "Average kv_done state latency");
   b.add_time_avg(l_bluestore_state_deferred_queued_lat, "state_deferred_queued_lat",
     "Average deferred_queued state latency");
   b.add_time_avg(l_bluestore_state_deferred_aio_wait_lat, "state_deferred_aio_wait_lat",
@@ -8752,7 +8754,6 @@ void BlueStore::_txc_state_proc(TransContext *txc)
       // ** fall-thru **
 
     case TransContext::STATE_KV_DONE:
-      txc->log_state_latency(logger, l_bluestore_state_kv_done_lat);
       if (txc->deferred_txn) {
 	txc->state = TransContext::STATE_DEFERRED_QUEUED;
 	_deferred_queue(txc);
@@ -9341,6 +9342,8 @@ void BlueStore::_kv_sync_thread()
 	}
       }
 
+      utime_t after_submit = ceph_clock_now();
+
       // release throttle *before* we commit.  this allows new ops
       // to be prepared and enter pipeline while we are waiting on
       // the kv commit sync/flush.  then hopefully on the next
@@ -9379,9 +9382,13 @@ void BlueStore::_kv_sync_thread()
 	}
       }
 
+      utime_t after_deferred = ceph_clock_now();
+
       // submit synct synchronously (block and wait for it to commit)
       int r = cct->_conf->bluestore_debug_omit_kv_commit ? 0 : db->submit_transaction_sync(synct);
       ceph_assert(r == 0);
+
+      utime_t after_sync = ceph_clock_now();
 
       {
 	std::unique_lock<std::mutex> m(kv_finalize_lock);
@@ -9418,15 +9425,15 @@ void BlueStore::_kv_sync_thread()
       {
 	utime_t finish = ceph_clock_now();
 	utime_t dur_flush = after_flush - start;
-	utime_t dur_kv = finish - after_flush;
 	utime_t dur = finish - start;
 	dout(20) << __func__ << " committed " << kv_committing.size()
 	  << " cleaned " << deferred_stable.size()
 	  << " in " << dur
-	  << " (" << dur_flush << " flush + " << dur_kv << " kv commit)"
 	  << dendl;
 	logger->tinc(l_bluestore_kv_flush_lat, dur_flush);
-	logger->tinc(l_bluestore_kv_commit_lat, dur_kv);
+	logger->tinc(l_bluestore_kv_submit_lat, after_submit-after_flush);
+	logger->tinc(l_bluestore_kv_deferred_lat, after_deferred-after_submit);
+	logger->tinc(l_bluestore_kv_commit_lat, after_sync-after_deferred);
 	logger->tinc(l_bluestore_kv_lat, dur);
       }
 

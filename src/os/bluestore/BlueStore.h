@@ -61,6 +61,8 @@ class BlueStoreRepairer;
 enum {
   l_bluestore_first = 732430,
   l_bluestore_kv_flush_lat,
+  l_bluestore_kv_submit_lat,
+  l_bluestore_kv_deferred_lat,
   l_bluestore_kv_commit_lat,
   l_bluestore_kv_lat,
   l_bluestore_state_prepare_lat,
@@ -68,7 +70,6 @@ enum {
   l_bluestore_state_io_done_lat,
   l_bluestore_state_kv_queued_lat,
   l_bluestore_state_kv_committing_lat,
-  l_bluestore_state_kv_done_lat,
   l_bluestore_state_deferred_queued_lat,
   l_bluestore_state_deferred_aio_wait_lat,
   l_bluestore_state_deferred_cleanup_lat,
@@ -1545,7 +1546,6 @@ public:
       case l_bluestore_state_io_done_lat: return "io_done";
       case l_bluestore_state_kv_queued_lat: return "kv_queued";
       case l_bluestore_state_kv_committing_lat: return "kv_committing";
-      case l_bluestore_state_kv_done_lat: return "kv_done";
       case l_bluestore_state_deferred_queued_lat: return "deferred_queued";
       case l_bluestore_state_deferred_cleanup_lat: return "deferred_cleanup";
       case l_bluestore_state_finishing_lat: return "finishing";
