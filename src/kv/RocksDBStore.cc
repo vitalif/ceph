@@ -748,10 +748,12 @@ int RocksDBStore::submit_common(rocksdb::WriteOptions& woptions, KeyValueDB::Tra
   RocksDBTransactionImpl * _t =
     static_cast<RocksDBTransactionImpl *>(t.get());
   woptions.disableWAL = disableWAL;
-  lgeneric_subdout(cct, rocksdb, 30) << __func__;
-  RocksWBHandler bat_txc;
-  _t->bat.Iterate(&bat_txc);
-  *_dout << " Rocksdb transaction: " << bat_txc.seen << dendl;
+  if (g_conf->rocksdb_perf) {
+    lgeneric_subdout(cct, rocksdb, 30) << __func__;
+    RocksWBHandler bat_txc;
+    _t->bat.Iterate(&bat_txc);
+    *_dout << " Rocksdb transaction: " << bat_txc.seen << dendl;
+  }
   
   rocksdb::Status s = db->Write(woptions, &_t->bat);
   if (!s.ok()) {
