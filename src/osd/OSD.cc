@@ -6400,6 +6400,7 @@ void OSD::dispatch_session_waiting(SessionRef session, OSDMapRef osdmap)
     } else {
       pgid = m->get_spg();
     }
+    dout(15) << "enqueue_op without fast dispatch" << dendl;
     enqueue_op(pgid, op, m->get_map_epoch());
   }
 

@@ -15,7 +15,7 @@
 #ifndef CEPH_CONFIG_H
 #define CEPH_CONFIG_H
 
-#include <map>
+#include <unordered_map>
 #include <boost/container/small_vector.hpp>
 #include "common/ConfUtils.h"
 #include "common/entity_name.h"
@@ -96,21 +96,21 @@ public:
   /*
    * Mapping from legacy config option names to class members
    */
-  std::map<std::string, md_config_t::member_ptr_t> legacy_values;
+  std::unordered_map<std::string, md_config_t::member_ptr_t> legacy_values;
 
   /**
    * The configuration schema, in the form of Option objects describing
    * possible settings.
    */
-  std::map<std::string, const Option&> schema;
+  std::unordered_map<std::string, const Option&> schema;
 
   /**
    * The current values of all settings described by the schema
    */
-  std::map<std::string, map<int32_t,Option::value_t>> values;
+  std::unordered_map<std::string, map<int32_t,Option::value_t>> values;
 
   /// values from mon that we failed to set
-  std::map<std::string,std::string> ignored_mon_values;
+  std::unordered_map<std::string,std::string> ignored_mon_values;
 
   /// encoded, cached copy of of values + ignored_mon_values
   bufferlist values_bl;

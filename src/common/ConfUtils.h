@@ -16,8 +16,8 @@
 #define CEPH_CONFUTILS_H
 
 #include <deque>
-#include <map>
-#include <set>
+#include <unordered_map>
+#include <unordered_set>
 #include <string>
 
 #include "include/buffer_fwd.h"
@@ -42,22 +42,28 @@ public:
   ConfLine(const std::string &key_, const std::string &val_,
 	   const std::string &newsection_, const std::string &comment_, int line_no_);
   bool operator<(const ConfLine &rhs) const;
+  bool operator==(const ConfLine &rhs) const;
   friend std::ostream &operator<<(std::ostream& oss, const ConfLine &l);
 
   std::string key, val, newsection;
 };
 
+template<>
+struct std::hash<ConfLine> {
+  std::size_t operator()(const ConfLine &l) const;
+};
+
 class ConfSection {
 public:
-  typedef std::set <ConfLine>::const_iterator const_line_iter_t;
+  typedef std::unordered_set <ConfLine>::const_iterator const_line_iter_t;
 
-  std::set <ConfLine> lines;
+  std::unordered_set <ConfLine> lines;
 };
 
 class ConfFile {
 public:
-  typedef std::map <std::string, ConfSection>::iterator section_iter_t;
-  typedef std::map <std::string, ConfSection>::const_iterator const_section_iter_t;
+  typedef std::unordered_map <std::string, ConfSection>::iterator section_iter_t;
+  typedef std::unordered_map <std::string, ConfSection>::const_iterator const_section_iter_t;
 
   ConfFile();
   ~ConfFile();
@@ -80,7 +86,7 @@ private:
   static ConfLine* process_line(int line_no, const char *line,
 			        std::deque<std::string> *errors);
 
-  std::map <std::string, ConfSection> sections;
+  std::unordered_map <std::string, ConfSection> sections;
 };
 
 #endif

@@ -470,6 +470,7 @@ void AsyncConnection::process()
 	  }
 
           // Reset state
+          // ТУТ
           data_buf.clear();
           front.clear();
           middle.clear();
@@ -784,6 +785,7 @@ void AsyncConnection::process()
           }
 
 	  // clean up local buffer references
+	  // ТУТ
           data_buf.clear();
           front.clear();
           middle.clear();
@@ -2211,6 +2213,7 @@ void AsyncConnection::prepare_send_message(uint64_t features, Message *m, buffer
   // encode and copy out of *m
   m->encode(features, msgr->crcflags);
 
+  // ТУТ
   bl.append(m->get_payload());
   bl.append(m->get_middle());
   bl.append(m->get_data());

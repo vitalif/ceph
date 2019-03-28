@@ -51,11 +51,22 @@ operator<(const ConfLine &rhs) const
     return false;
 }
 
+bool ConfLine::
+operator==(const ConfLine &rhs) const
+{
+  return key == rhs.key;
+}
+
 std::ostream &operator<<(std::ostream& oss, const ConfLine &l)
 {
   oss << "ConfLine(key = '" << l.key << "', val='"
       << l.val << "', newsection='" << l.newsection << "')";
   return oss;
+}
+
+std::size_t std::hash<ConfLine>::operator()(const ConfLine &l) const
+{
+  return std::hash<std::string>()(l.key);
 }
 ///////////////////////// ConfFile //////////////////////////
 ConfFile::

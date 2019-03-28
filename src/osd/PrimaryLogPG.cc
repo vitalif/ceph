@@ -3985,6 +3985,7 @@ void PrimaryLogPG::execute_ctx(OpContext *ctx)
 	log_op_stats(
 	  ctx);
 
+      // ТУТ
       if (m && !ctx->sent_reply) {
 	MOSDOpReply *reply = ctx->reply;
 	if (reply)
