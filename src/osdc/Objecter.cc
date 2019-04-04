@@ -1187,6 +1187,10 @@ void Objecter::handle_osd_map(MOSDMap *m)
 			<< dendl;
 	  OSDMap::Incremental inc(m->incremental_maps[e]);
 	  osdmap->apply_incremental(inc);
+          pg_up_cache.clear();
+          pg_acting_cache.clear();
+          pg_up_primary_cache.clear();
+          pg_acting_primary_cache.clear();
 
           emit_blacklist_events(inc);
 
@@ -1200,6 +1204,10 @@ void Objecter::handle_osd_map(MOSDMap *m)
           emit_blacklist_events(*osdmap, *new_osdmap);
 
           osdmap = new_osdmap;
+          pg_up_cache.clear();
+          pg_acting_cache.clear();
+          pg_up_primary_cache.clear();
+          pg_acting_primary_cache.clear();
 
 	  logger->inc(l_osdc_map_full);
 	}
@@ -2864,8 +2872,21 @@ int Objecter::_calc_target(op_target_t *t, Connection *con, bool any_change)
   unsigned pg_num = pi->get_pg_num();
   int up_primary, acting_primary;
   vector<int> up, acting;
-  osdmap->pg_to_up_acting_osds(pgid, &up, &up_primary,
-			       &acting, &acting_primary);
+  
+  if (pg_up_cache.find(pgid) != pg_up_cache.end()) {
+    up = pg_up_cache[pgid];
+    acting = pg_acting_cache[pgid];
+    up_primary = pg_up_primary_cache[pgid];
+    acting_primary = pg_acting_primary_cache[pgid];
+  } else {
+    osdmap->pg_to_up_acting_osds(pgid, &up, &up_primary,
+			         &acting, &acting_primary);
+    pg_up_cache[pgid] = up;
+    pg_acting_cache[pgid] = acting;
+    pg_up_primary_cache[pgid] = up_primary;
+    pg_acting_primary_cache[pgid] = acting_primary;
+  }
+
   bool sort_bitwise = osdmap->test_flag(CEPH_OSDMAP_SORTBITWISE);
   bool recovery_deletes = osdmap->test_flag(CEPH_OSDMAP_RECOVERY_DELETES);
   unsigned prev_seed = ceph_stable_mod(pgid.ps(), t->pg_num, t->pg_num_mask);

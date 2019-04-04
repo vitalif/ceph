@@ -1210,6 +1210,10 @@ public:
   ZTracer::Endpoint trace_endpoint;
 private:
   OSDMap    *osdmap;
+  std::map<pg_t, std::vector<int>> pg_up_cache;
+  std::map<pg_t, std::vector<int>> pg_acting_cache;
+  std::map<pg_t, int> pg_up_primary_cache;
+  std::map<pg_t, int> pg_acting_primary_cache;
 public:
   using Dispatcher::cct;
   std::multimap<string,string> crush_location;
